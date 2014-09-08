@@ -1,0 +1,21 @@
+{
+  "name": "Auth App",
+  "version": "1",
+  "authors": [
+    "DT <danjiro11@gmail.com>"
+  ],
+  "description": "MEAN Auth",
+  "main": "server.js",
+  "keywords": [
+    "MEAN",
+    "authentication"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "bootstrap": "~3.2.0",
+    "font-awesome": "~4.2.0",
+    "angular": "~1.2.23",
+    "angular-route": "~1.2.23",
+    "angular-resource": "~1.2.23"
+  }
+}

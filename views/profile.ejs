@@ -1,0 +1,119 @@
+<!-- views/profile.ejs -->
+<!doctype html>
+<html>
+<head>
+	<title>Node Authentication</title>
+	<link rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.min.css">
+	<!-- load bootstrap css -->
+	<link rel="stylesheet" href="/bower_components/font-awesome/css/font-awesome.min.css">
+	<!-- load fontawesome -->
+	<script src="/bower_components/jquery/dist/jquery.min.js"></script>
+	<!-- jQuery -->	
+	<style>
+		body 		{ padding-top:80px; word-wrap:break-word; }
+	</style>
+</head>
+<body>
+<div class="container">
+
+	<div class="page-header text-center">
+		<h1><span class="fa fa-anchor"></span> Profile Page</h1>
+		<a href="/logout" class="btn btn-default btn-sm">Logout</a>
+	</div>
+
+	<div class="row">
+
+		<!-- LOCAL INFORMATION -->
+		<div class="col-sm-6">
+			<div class="well">
+				<h3><span class="fa fa-user"></span> Local</h3>
+
+					<p>
+						<strong>id</strong>: <%= user._id %><br>
+						<strong>email</strong>: <%= user.local.email %><br>
+						<strong>password</strong>: <%= user.local.password %><br>
+						<strong>text</strong>: <%= user.text %>
+					</p>
+
+			</div>
+		</div>
+		<div class="col-sm-6">
+			<div class="well">
+				<h3><span class="fa fa-user"></span> Todos</h3>
+
+					<p class="todoList">
+
+					</p>
+
+			</div>
+		</div>
+
+	</div>
+
+	<!-- FORM TO CREATE TEXT -->
+	<div id="todo-form" class="row">
+		<div class="col-lg-12">
+			<form action="/api/user" method="put">
+				<div class="input-group">
+					<input type="text" class="form-control textInput" name="text" placeholder="Add new item">
+					<span class="input-group-btn">
+						<button type="submit" class="text-submit btn btn-primary">Add</button>
+					</span>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<!-- FORM TO CREATE TODOS -->
+	<div id="todo-form" class="row">
+		<div class="col-lg-12">
+			<form>
+				<div class="input-group">
+					<input type="text" class="form-control todoInput" name="text" placeholder="Add new item">
+					<span class="input-group-btn">
+						<button type="submit" class="todo-submit btn btn-primary">Add</button>
+					</span>
+				</div>
+			</form>
+		</div>
+	</div>		
+
+</div>
+<script>
+	$(function() {
+		$(".text-submit").on('click', function(e){
+			e.preventDefault();
+			var inputText = $('.textInput').val();
+			$.ajax({
+				type: "PUT",
+				url: '/api/user',
+				data: { text: inputText }
+			}).done(function(data) {
+			});
+		});
+
+		$(".todo-submit").on('click', function(e){
+			e.preventDefault();
+			var inputText = $('.todoInput').val();
+			$.ajax({
+				type: "POST",
+				url: '/api/user/todo',
+				data: { text: inputText }
+			}).done(function(data) {
+				// console.log(data);
+			});
+		});
+		$.get('/api/user/todo', function(data) {
+			console.log(data);
+			var todoNum = 1;
+			var html = '';
+			$.each(data, function(i) {
+				html += '<strong>Todo #' + todoNum + '</strong>: ' + data[i].text + '<br>';
+				todoNum++;
+			});
+			$('.todoList').append(html);
+		});
+	})
+</script>
+</body>
+</html>

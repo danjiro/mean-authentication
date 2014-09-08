@@ -1,0 +1,26 @@
+<!-- views/index.ejs -->
+<!doctype html>
+<html ng-app='authApp'>
+<head>
+	<title>Node Authentication</title>
+	<link rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.min.css">
+	<!-- load bootstrap css -->
+	<link rel="stylesheet" href="/bower_components/font-awesome/css/font-awesome.min.css">
+	<!-- load fontawesome -->
+	<script src="/bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="/bower_components/angular/angular.min.js"></script>
+	<script src="/bower_components/angular-route/angular-route.min.js"></script>
+	<script src="/js/core.js"></script>
+	<script src="/js/controllers/main.js"></script>
+	<style>
+		body { padding-top:80px; }
+	</style>
+</head>
+<body>
+	<div class="container">
+
+		<ng-view class='view-animate'></ng-view>
+
+	</div>
+</body>
+</html>
