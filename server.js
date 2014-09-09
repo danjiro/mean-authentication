@@ -25,7 +25,7 @@ require('./config/passport')(passport);
 app.use(morgan('dev')); // log all requests to console
 app.use(cookieParser()); // read cookie-parser
 app.use(bodyParser()); // get information from html forms
-// app.use(express.static(__dirname + '/public')); // set files directory to /public
+app.use(express.static(__dirname + '/public')); // set files directory to /public
 app.use('/bower_components', express.static(__dirname + '/bower_components')); // set bower components folder to static location
 
 app.set('view engine', 'ejs'); // set up ejs for templating

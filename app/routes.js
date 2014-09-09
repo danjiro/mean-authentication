@@ -3,27 +3,36 @@
 var User = require('./models/user.js');
 var Todo = require('./models/todo.js');
 
+var auth = function(req, res, next) {
+	if(!req.isAuthenticated()) { res.send(401) }
+	else { next(); };
+}
+
 module.exports = function (app, passport) {
 
 	// homepage
 	// ------------------------------------------
 	app.get('/', function (req, res) {
-		res.render('index.ejs');
+		// res.render('index.ejs');
 	});
 
 	// login
 	// ------------------------------------------
-	app.get('/login', function (req, res) {
-		if(req.isAuthenticated()) { res.redirect('/profile') }
-		res.render('login.ejs', { message: req.flash('loginMessage') }); // pass in flash data if exists
+	app.get('/loggedin', function (req, res) {
+		res.send(req.isAuthenticated() ? req.user : '0');
+
+		// if(req.isAuthenticated()) { res.redirect('/profile') }
+		// res.render('login.ejs', { message: req.flash('loginMessage') }); // pass in flash data if exists
 	});
 
 	// process login form
 	app.post('/login', passport.authenticate('local-login', {
-		successRedirect: '/profile', // redirect to secure profile page
-		failureRedirect: '/login', // redirect back to login
+		// successRedirect: '/profile', // redirect to secure profile page
+		// failureRedirect: '/login', // redirect back to login
 		failureFlash: true // allow flash message
-	}));
+	}), function (req, res) {
+		res.send(req.user);
+	});
 
 	// signup
 	// ------------------------------------------
@@ -42,16 +51,15 @@ module.exports = function (app, passport) {
 	// profile page
 	// ------------------------------------------
 	app.get('/profile', isLoggedIn, function (req, res) {
-		res.render('profile.ejs', {
-			user: req.user // get user out of session to pass to template
-		});
+		res.send(req.user);
 	});
 
 	// logout
 	// ------------------------------------------
 	app.get('/logout', function (req, res) {
 		req.logout();
-		res.redirect('/');
+		res.send(200, { message: 'logged out' });
+		// res.redirect('/');
 	});
 
 	// post text to user's profile
