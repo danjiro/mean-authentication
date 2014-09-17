@@ -2,7 +2,7 @@
   "name": "MEAN Authentication",
   "version": "1",
   "authors": [
-    "DT <danjiro11@gmail.com>"
+    "DT"
   ],
   "description": "MEAN Todo + Auth",
   "main": "server.js",
@@ -13,8 +13,14 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "angular-animate": "~1.2.24",
-    "angular-bootstrap": "~0.11.0"
+    "angular-cookies": "~1.2.24",
+    "angular-resource": "~1.2.23",
+    "angular-route": "~1.2.23",
+    "angular-ui-router": "~0.2.11",
+    "angular": "~1.2.23",
+    "bootstrap": "~3.2.0",
+    "font-awesome": "~4.2.0",
+    "ng-resource": "~0.0.2"
   },
   "homepage": "https://github.com/danjiro/mean-authentication",
   "ignore": [
