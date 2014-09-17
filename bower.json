@@ -2,7 +2,7 @@
   "name": "Auth App",
   "version": "1",
   "authors": [
-    "DT <danjiro11@gmail.com>"
+    "DT"
   ],
   "description": "MEAN Auth",
   "main": "server.js",
