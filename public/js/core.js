@@ -1,71 +1,73 @@
 // js/core.js
 'use strict';
 
-angular.module('authApp', ['ngRoute', 'authController' /* , 'authService' */])
+angular.module('authApp', ['ui.router', 'authController', 'authService' ])
 
-	.config(['$routeProvider', '$locationProvider', '$httpProvider', 
-		function($routeProvider, $locationProvider, $httpProvider) {
+	.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', '$httpProvider', 
+		function($stateProvider, $urlRouterProvider, $locationProvider, $httpProvider) {
 
-			var checkLoggedin = function($q, $timeout, $http, $location, $rootScope) {
-				var deferred = $q.defer(); // initialize new promise
-
-				// make ajax call to see if user is logged in or not
-				$http.get('/loggedin').success(function (user) {
-					if (user !== '0') { $timeout(deferred.resolve, 0) } // authenticated
-					else { // not authenticated
-						$rootScope.message = 'You need to log in.';
-						$timeout(function(){ deferred.reject(); }, 0);
-						$location.url('/login');
-					};
-				});
-
-				return deferred.promise;
-			};
-
-			$httpProvider.responseInterceptors.push(function($q, $location) {
-				return function (promise) {
-					return promise.then(function (response) {
-						return response;
-					}, function (response) {
-						if (response.status === 401) {
-							$location.url('/login');
-							console.log('401');
-						}
-						return $q.reject(response);
-					});
-				}
-			});
-
-			$routeProvider
-				.when('/', {
+			$stateProvider
+				.state('index', {
+					url: '/',
 					templateUrl: '/partials/main.html',
-					controller: 'MainCtrl'
+					controller: 'IndexCtrl'
 				})
-				.when('/login', {
+				.state('login', {
+					url: '/login',
 					templateUrl: '/partials/login.html',
 					controller: 'LoginCtrl'
 				})
-				.when('/signup', {
-					templateUrl: '/partials/signup.html'
-					/*controller: 'MainCtrl',
-					controllerAs: 'main' */
+				.state('signup', {
+					url: '/signup',
+					templateUrl: '/partials/signup.html',
+					controller: 'SignupCtrl', 
 				})
-				.when('/profile', {
-					templateUrl: '/partials/profile.html',
-					controller: 'ProfileCtrl',
-					resolve: {
-						loggedin: checkLoggedin
-					}
-					/*controller: 'MainCtrl',
-					controllerAs: 'main' */
-				});												
-				// .when('/todo/:todo_id', {
-				// 	templateUrl: '/partials/todoDetails.html',
-				// 	controller: 'TodoDetailsCtrl'
-				// });
-				// .otherwise({
-				// 	redirectTo: '/'
-				// });
+				.state('user', {
+					// abstract: true,					
+					url: '/user',
+					templateUrl: '/partials/user.html',
+					resolve: { // need to resolve $scope.user so todos can be inserted (better way to do this?)
+						getUser: function(UserService) {
+							return UserService.getUser();
+						}
+					},					
+					controller: 'UserCtrl',
+					authenticate: true
+				})
+					.state('user.admin', {
+						url: '/admin',
+						templateUrl: '/partials/user.admin.html',
+						authenticate: true
+					})
+					.state('user.todos', {
+						url: '/todos',
+						templateUrl: '/partials/user.todos.html',
+						resolve: { // test to get rid of empty data fields before ajax content is returned
+								getTodos: function(UserService) {
+									return UserService.getTodos();
+								}
+						},
+						controller: function($scope, getTodos) {
+							$scope.user.todos = getTodos.data;
+						},
+						authenticate: true
+					})
+					.state('user.todoDetails', {
+						url: '/todo/details/:todo_id',
+						templateUrl: '/partials/user.todoDetails.html',
+						controller: 'TodoDetailsCtrl',
+						authenticate: true
+					});												
 
 			$locationProvider.html5Mode(true);
+	}])
+
+	.run(['$rootScope', '$state', 'AuthService', function ($rootScope, $state, AuthService) {
+		$rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
+			if (toState.authenticate && !AuthService.isAuthenticated()) {
+				// not authenticated
+				$state.transitionTo('login');
+				event.preventDefault();
+			}
+		});
 	}]);

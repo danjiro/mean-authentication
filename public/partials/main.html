@@ -1,23 +1,24 @@
 <!-- partials/main.html -->
-
-<div class="jumbotron text-center">
-	<h1>
-		<span class="fa fa-lock"></span>
-		Node Authentication
-	</h1>
-
-	<p>Login or Register with:</p>
-
-	<a href="/login" class="btn btn-default">
-		<span class="fa fa-user"></span>
-		Local Login
-	</a>
-	<a href="/signup" class="btn btn-default">
-		<span class="fa fa-user"></span>
-		Local Signup
-	</a>
-	<a href="/profile" class="btn btn-default">
-		<span class="fa fa-user"></span>
-		Profile
-	</a>	
+<div class="page-header">
+	<h1>Newest 20</h1>
 </div>
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th>Created</th>
+			<th>Description</th>
+			<th>Completed?</th>
+			<th>Owner</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="todo in newestTodos | filter:doneFilter | filter:search.text">
+			<td>{{ todo.submitted | date:'medium' }}</td>
+			<td>{{ todo.text }}</td>
+			<td>
+				<span class="label" ng-class="todo.done ? 'label-success' : 'label-warning'">{{todo.done == false ? "Not completed" : "Completed"}}</span>
+			</td>
+			<td> {{todo._creator.local.username}} </td>
+		</tr>
+	</tbody>
+</table>

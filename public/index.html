@@ -9,18 +9,30 @@
 	<!-- load fontawesome -->
 	<script src="/bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="/bower_components/angular/angular.min.js"></script>
-	<script src="/bower_components/angular-route/angular-route.min.js"></script>
+	<!-- <script src="/bower_components/angular-route/angular-route.min.js"></script> -->
+	<script src="/bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
+	<script src="/bower_components/angular-resource/angular-resource.min.js"></script>
+	<script src="/bower_components/angular-cookies/angular-cookies.min.js"></script>
+	<script src="/bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
 	<script src="/js/core.js"></script>
 	<script src="/js/controllers/main.js"></script>
+	<script src="/js/services/session.js"></script>
+	<script src="/js/services/authentication.js"></script>
+	<script src="/js/services/user.js"></script>
+	<script src="/js/services/public.js"></script>
+	<!-- <script src="/js/directives/ui-dropdown.js"></script> -->
+
 	<style>
-		body { padding-top:80px; }
+/*		body { padding-top:80px; }*/
 	</style>
 </head>
-<body>
+<body ng-controller="AppCtrl">
+	<header data-ng-controller="NavigationCtrl" data-ng-include="'/partials/navigation.html'"></header>
+
 	<div class="container">
-
-		<ng-view class='view-animate'></ng-view>
-
+		<h1 ng-show="spinner" style="position:absolute; top:49%; left: 49%;"><i class="fa fa-circle-o-notch fa-spin"></i></h1>
+		<ui-view class='view-animate'></ui-view>
 	</div>
+
 </body>
 </html>

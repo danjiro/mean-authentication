@@ -3,103 +3,94 @@
 var User = require('./models/user.js');
 var Todo = require('./models/todo.js');
 
-var auth = function(req, res, next) {
-	if(!req.isAuthenticated()) { res.send(401) }
-	else { next(); };
-}
-
 module.exports = function (app, passport) {
 
-	// homepage
+	// homepage [access: GET @ /]
 	// ------------------------------------------
-	app.get('/', function (req, res) {
-		// res.render('index.ejs');
+	// app.get('/', function (req, res) {
+	// 	// res.render('index.ejs');
+	// });
+
+	// get newest 20 todos [access: GET @ /api/public/todos]
+	// ------------------------------------------
+	app.get('/api/public/todos', function (req, res) {
+
+		Todo.find({}, '-watchers -__v -_id', { sort: { 'submitted': -1 }, limit: 20 })
+			.populate({
+				path: '_creator',
+				select: 'local.username -_id'
+			})
+			.exec(function (err, todo) {
+				if (err) (res.send(err))
+					
+				res.json(todo);
+			});
+
 	});
 
-	// login
+	// login [access: POST @ /auth/login]
 	// ------------------------------------------
-	app.get('/loggedin', function (req, res) {
-		res.send(req.isAuthenticated() ? req.user : '0');
-
-		// if(req.isAuthenticated()) { res.redirect('/profile') }
-		// res.render('login.ejs', { message: req.flash('loginMessage') }); // pass in flash data if exists
+	app.post('/auth/login', function (req, res, next) {
+		passport.authenticate('local-login', { session: false, failureFlash: true }, function (err, user, info) {
+			if (err || !user) {
+				res.status(400).send(info);
+			}
+			else {
+				req.logIn(user, function (err) {
+					if (err) { return next(err) }
+					res.send(user);
+				})
+			};
+		})(req, res, next);
 	});
 
-	// process login form
-	app.post('/login', passport.authenticate('local-login', {
-		// successRedirect: '/profile', // redirect to secure profile page
-		// failureRedirect: '/login', // redirect back to login
-		failureFlash: true // allow flash message
-	}), function (req, res) {
-		res.send(req.user);
-	});
-
-	// signup
+	// logout [access: GET @ /auth/logout]
 	// ------------------------------------------
-	app.get('/signup', function (req, res) {
-		if(req.isAuthenticated()) { res.redirect('/profile') }
-		res.render('signup.ejs', { message: req.flash('signupMessage') });
+	app.get('/auth/logout', function (req, res) {
+		req.logout();
+		res.send({ message: 'Logged out' });
 	});
 
 	// process signup form
-	app.post('/signup', passport.authenticate('local-signup', {
-		successRedirect: '/profile', // redirect to secure profile page
-		failureRedirect: '/signup', // redirect back to signup back
-		failureFlash: true // allow flash message
-	}));
+	app.post('/auth/signup', function (req, res, next) {
+		passport.authenticate('local-signup', { session: false, failureFlash: true }, function (err, user, info) {
+			if (err || !user) {
+				res.status(422).send(info);
+			}
+			else {
+				req.logIn(user, function (err) {
+					if (err) { return next(err) }
+					res.send(user);
+				})
+			};
+		})(req, res, next);
+	});	
 
-	// profile page
+	// returns current authenticated user [access: GET @ /api/user/me]
 	// ------------------------------------------
-	app.get('/profile', isLoggedIn, function (req, res) {
+	app.get('/api/user/me', isLoggedInApi, function (req, res) {
 		res.send(req.user);
 	});
 
-	// logout
+	// get user's todos [access: GET @ /api/user/todos]
 	// ------------------------------------------
-	app.get('/logout', function (req, res) {
-		req.logout();
-		res.send(200, { message: 'logged out' });
-		// res.redirect('/');
-	});
-
-	// post text to user's profile
-	// ------------------------------------------
-	app.put('/api/user', isLoggedInApi, function (req, res) {
-		// Add text field to current user
-		User.findOne( { 'local.email': req.user.local.email }, function (err, user) {
-			if(err) { res.send(err) }
-
-			user.text = req.body.text;
-			user.save(function (err) { 
-				if(err) { res.send(err); } 
-				res.send(user);
-			});
-		});
-	});
-
-	// get todos
-	// ------------------------------------------
-	app.get('/api/user/todo', isLoggedInApi, function (req, res) {
-		// Todo.find({ _creator: req.user._id })
-		// 	.exec(function (err, todos) {
-		// 		if (err) { res.send(err) }
-
-		// 		res.json(todos);
-		// 	});
+	app.get('/api/user/todos', isLoggedInApi, function (req, res) {
 
 		User.findOne({ 'local.email': req.user.local.email })
 			.populate({
 				path: 'todos',
-				select: 'text done -_id'
+				select: 'text done submitted'
 			})
 			.exec(function (err, user) {
 				res.json(user.todos);
 			});
+
 	});
 
-	// create new todo
+	// create new todo [access: POST @ /api/user/todos]
 	// ------------------------------------------
-	app.post('/api/user/todo', isLoggedInApi, function (req, res) {
+	app.post('/api/user/todos', isLoggedInApi, function (req, res) {
+
 		// Create new todo
 		Todo.create({
 			text: req.body.text,
@@ -113,8 +104,15 @@ module.exports = function (app, passport) {
 					if (err) { res.send(err) };
 
 					user.todos.push(todo._id);
-					user.save();
-					res.json(user);
+					user.save(function (err, user) {
+						if (err) { res.send(err) }
+
+						Todo.populate(user, { path: 'todos' }, function (err, user) {
+							if (err) { res.send(err) }
+
+							res.send(user.todos);
+						});
+					});
 				});
 
 			// Todo.findOne({ _id: todo._id })
@@ -127,18 +125,107 @@ module.exports = function (app, passport) {
 		});
 	});
 
+	// get todo details [ access: GET @ /api/todos/todo_id ]
+	app.get('/api/user/todos/:todo_id', hasAccessToTodo, function(req, res) {
+		Todo.findById( req.params.todo_id, function(err, todo) {
+			if (err) { res.send(err); }
+			res.json(todo);
+		});
+	})	
+
+	// delete todo [access: DELETE @ /api/user/todos/todo_id]
+	// ------------------------------------------
+
+	// delete a todo [ access: DELETE @ /api/todos/todo_id ]
+	app.delete('/api/user/todos/:todo_id', hasAccessToTodo, function(req, res) {
+
+		// delete the todo
+		Todo.remove({
+			_id: req.params.todo_id
+		}, function(err, todo) {
+			if (err) { res.send(err); }
+
+			// remove the todo from user's todo list
+			User.findByIdAndUpdate(req.user._id,
+				{ $pull: { todos: req.params.todo_id } }, function (err, user) {
+					if (err) { res.send(err) }
+
+					// repopulate user's todo list
+					Todo.populate(user, 
+						{ path: 'todos' }, function (err, user) {
+						if (err) { res.send(err) }
+
+						res.send(user.todos);
+					});
+				});
+			});
+
+	});
+
+	// update a todo [ access: PUT @ /api/todos/todo_id ]
+	app.put('/api/user/todos/:todo_id', hasAccessToTodo, function(req, res) {
+		// update a todo
+		Todo.findByIdAndUpdate(req.params.todo_id, 
+			req.body,
+			function(err, todo) {
+				if (err) { res.send(err); }; 
+				res.json(todo);
+		});
+
+	});	
+
+	// profile page
+	// ------------------------------------------
+	// app.get('/auth/profile', isLoggedInApi, function (req, res) {
+	// 	res.send(req.user);
+	// });
+
+	// signup
+	// ------------------------------------------
+	// app.get('/signup', function (req, res) {
+	// 	if(req.isAuthenticated()) { res.redirect('/profile') }
+	// 	res.render('signup.ejs', { message: req.flash('signupMessage') });
+	// });
+
+
+
+
+
+	// post text to user's profile
+	// ------------------------------------------
+	// app.put('/api/user', isLoggedInApi, function (req, res) {
+	// 	// Add text field to current user
+	// 	User.findOne( { 'local.email': req.user.local.email }, function (err, user) {
+	// 		if(err) { res.send(err) }
+
+	// 		user.text = req.body.text;
+	// 		user.save(function (err) { 
+	// 			if(err) { res.send(err); } 
+	// 			res.send(user);
+	// 		});
+	// 	});
+	// });
+
 };
 
 // route middleware to make sure user is logged in
-function isLoggedIn(req, res, next) {
+function hasAccessToTodo(req, res, next) {
 
 	// if user is authenticated, continue
 	if (req.isAuthenticated()) {
-		return next();
+		Todo.findOne({ '_id': req.params.todo_id })
+			.exec(function (err, todo) {
+
+				if (err) { res.send(err) }
+				if (req.user._id.equals(todo._creator)) {
+					return next();
+				}
+				else { res.send({ message: 'You do not have access to alter this todo' }); };
+			});
 	}
 
 	// if not, redirect them to homepage
-	res.redirect('/login');
+	else res.send({ message: 'Not authorized to access todo' });
 
 };
 
@@ -150,6 +237,6 @@ function isLoggedInApi(req, res, next) {
 	}
 
 	// if not, redirect them to homepage
-	res.send({ message: 'not authenticated' });
+	res.status(401).send({ message: 'Not authorized' });
 
 };

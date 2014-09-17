@@ -23,7 +23,7 @@ mongoose.connect(configDB.url);
 require('./config/passport')(passport);
 
 app.use(morgan('dev')); // log all requests to console
-app.use(cookieParser()); // read cookie-parser
+app.use(cookieParser("aasd")); // read cookie-parser
 app.use(bodyParser()); // get information from html forms
 app.use(express.static(__dirname + '/public')); // set files directory to /public
 app.use('/bower_components', express.static(__dirname + '/bower_components')); // set bower components folder to static location
@@ -39,6 +39,9 @@ app.use(flash()); // use connect-flash for flash messages stored in session
 // routes
 // ----------------------------------------------
 require('./app/routes.js')(app, passport);
+app.use('/', function(req, res) {
+	res.sendfile('./public/index.html');
+});
 
 // launch
 // ----------------------------------------------

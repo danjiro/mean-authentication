@@ -39,21 +39,35 @@ module.exports = function(passport) {
 
 					// user's email already exists in the database
 					if (user) {
-						return done(null, false, req.flash('signupMessage', 'That email is already taken.'));
+						return done(null, false, { message: 'That email is already taken.' });
 					}
-					// create user
+
 					else {
-						// if no user with that email, create the user
-						var newUser = new User();
+						// check to see if username is taken
+						// since we want to use the username as an url parameter
+						// for access profiles, it needs to be unique
+						User.findOne({ 'local.username': req.body.username }, function (err, user) {
+							if (err) { return done(err) };
 
-						// set user's local credentials
-						newUser.local.email = email;
-						newUser.local.password = newUser.generateHash(password);
+							if (user) { 
+								return done(null, false, { message: 'That username is already taken.' } ); 
+							}
 
-						// save the new user
-						newUser.save(function (err) {
-							if (err) { throw err };
-							return done(null, newUser);
+							else {
+								// if no user with that email or username, create the user
+								var newUser = new User();
+
+								// set user's local credentials
+								newUser.local.username = req.body.username;
+								newUser.local.email = email;
+								newUser.local.password = newUser.generateHash(password);
+
+								// save the new user
+								newUser.save(function (err) {
+									if (err) { throw err };
+									return done(null, newUser);
+								});								
+							};
 						});
 					};
 				});
@@ -73,11 +87,11 @@ module.exports = function(passport) {
 
 				// user's email doesn't exist in the database
 				if (!user) {
-					return done(null, false, req.flash('loginMessage', 'User does not exist.'));
+					return done(null, false, { message: 'User does not exist.' });
 				}
 				// user's password doesn't match password in database
 				if (!user.validPassword(password)) {
-					return done(null, false, req.flash('loginMessage', 'Sorry, incorrect password.'));
+					return done(null, false, { message: 'Sorry, incorrect password.' });
 				}
 
 				// email and password are correct, return successful user

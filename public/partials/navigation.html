@@ -1,0 +1,16 @@
+<nav class="navbar navbar-inverse navbar-static-top" role="navigation">
+	<div class="container-fluid">
+		<a href="/" class="navbar-brand">MEAN Auth + Todo</a>
+		<a ng-if="!sessionOwner" class="btn btn-link navbar-btn navbar-right" href="/login">Login</a>
+		<a ng-if="!sessionOwner" class="btn btn-info navbar-btn navbar-right" href="/signup">Sign up</a>
+		<div ng-if="sessionOwner" class="btn-group navbar-right " dropdown is-open="userNavStatus.isOpen">
+			<button class="btn btn-link navbar-btn dropdown-toggle">{{sessionOwner}} <i class="fa fa-caret-down"></i></button>
+			<ul class="dropdown-menu" role="menu">
+				<li><a ui-sref="user">Profile</a></li>
+		        <li><a ui-sref="user.admin">Admin</a></li>
+		        <li><a ui-sref="user.todos">Todos</a></li>
+		        <li><a href="#" ng-click="logout()">Logout</a></li>
+	      </ul>
+		</div>
+	</div>
+</nav>
