@@ -2,7 +2,7 @@
 
 'use strict'
 
-angular.module('authController', ['ui.router', 'authService', 'userService', 'publicService', 'ui.bootstrap'])
+angular.module('authController', [])
 	
 	// main app controller. encompasses entire app
 	// ------------------------------------------
@@ -10,10 +10,9 @@ angular.module('authController', ['ui.router', 'authService', 'userService', 'pu
 		
 		$scope.$watch(AuthService.isAuthenticated, function() {
 			if (AuthService.isAuthenticated) {
-				$scope.sessionOwner = SessionService.username;
+				$scope.sessionOwner = SessionService.sessionOwner;
 			}
 		});
-
 
 		// route changes with resolves to change until resolve is
 		// completed so show spinner to indicate loading. 
@@ -67,6 +66,7 @@ angular.module('authController', ['ui.router', 'authService', 'userService', 'pu
 		};
 
 	}])
+	
 	.controller('SignupCtrl', ['$scope', 'AuthService', function($scope, AuthService) {
 
 		$scope.signup = function(username, email, password) {
@@ -77,21 +77,27 @@ angular.module('authController', ['ui.router', 'authService', 'userService', 'pu
 		};
 
 	}])	
-	.controller('UserCtrl', ['$scope', '$state', 'UserService', 'getUser', function($scope, $state, UserService, getUser) {
-		
-		$scope.formData = {};
-		$scope.reverse = true;
 
-		$scope.user = getUser.data;
-		// UserService.getUser()
-		// 	.success(function (user) { $scope.user = user; })
-		// 	.error(function (err) { $state.transitionTo('login'); });
+	.controller('UserCtrl', ['$scope', '$state', 'UserService', 'SessionService', function($scope, $state, UserService, SessionService) {
+
+	}])
+
+	.controller('UserAdminCtrl', ['$scope', '$state', 'UserService', function($scope, $state, UserService){
+		UserService.getUser()
+			.success(function (user) { $scope.user = user; })
+			.error(function (err) { $state.transitionTo('login'); });			
+	}])
+
+	.controller('UserTodoCtrl', ['$scope', '$state', 'Todo', function($scope, $state, Todo){
+		$scope.todos = Todo.query();
+		$scope.todo = new Todo();
+		$scope.reverse = true;							
 
 		$scope.createTodo = function() {
-			if (!$.isEmptyObject($scope.formData)) {
-				UserService.createTodo($scope.formData).success(function (todos) {
-					$scope.formData = {};
-					$scope.user.todos = todos;
+			if ($scope.todo.text) {
+				$scope.todo.$save(function(user) { 
+					$scope.todos = user.todos;
+					$scope.todo = new Todo();
 				});				
 			}
 		};
@@ -99,34 +105,31 @@ angular.module('authController', ['ui.router', 'authService', 'userService', 'pu
 		// update todo
 		// --------------------------------------
 		$scope.updateTodo = function(id, fields, item) {
-			UserService.updateTodoDetails(id, fields)
-				.success(function(data) {
-					// pass whole todo object through and use indexOf(item) because 
-					// angular's orderby filter points $index to the ordered list
-					$scope.user.todos[$scope.user.todos.indexOf(item)] = data;
-				});
-		};		
-
+			Todo.update({ id: id }, fields, function(todo) {
+				// pass whole todo object through and use indexOf(item) because 
+				// angular's orderby filter points $index to the ordered list				
+				$scope.todos[$scope.todos.indexOf(item)] = todo;									
+			});
+		};			
 	}])
-	.controller('TodoDetailsCtrl', ['$scope', '$state', '$stateParams', 'UserService', function($scope, $state, $stateParams, UserService){
-			UserService.getTodoDetails($stateParams.todo_id).success(function (details) {
-				$scope.todoDetails = details;
-				
-				// save copy of original text in case user cancels updating
+
+	.controller('UserTodoDetailsCtrl', ['$scope', '$state', '$stateParams', 'Todo', function($scope, $state, $stateParams, Todo){
+
+			$scope.todoDetails = Todo.get({ id: $stateParams.todo_id }, function() {
 				$scope.originalText = $scope.todoDetails.text;
 			});
 
-			$scope.updateTodoDetails = function(fields) {
-				UserService.updateTodoDetails($stateParams.todo_id, fields).success(function(data) {
-					$scope.todoDetails = data;
-					$scope.originalText = $scope.todoDetails.text;
-				});
-			};
-
 			// DELETE=================================
 			$scope.deleteTodo = function() {
-				UserService.deleteTodo($stateParams.todo_id).success(function(data) {
+				Todo.delete({ id: $stateParams.todo_id }, function() {
 					$state.transitionTo('user.todos');
 				});
 			};	
+
+			$scope.updateTodoDetails = function(fields) {
+				$scope.todoDetails = Todo.update({ id: $stateParams.todo_id }, fields, function() {
+					$scope.originalText = $scope.todoDetails.text;
+				});
+			};					
+
 	}]);

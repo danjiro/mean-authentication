@@ -1,7 +1,7 @@
 // js/core.js
 'use strict';
 
-angular.module('authApp', ['ui.router', 'authController', 'authService' ])
+angular.module('authApp', ['ui.router', 'ngResource', 'authController', 'authService', 'userService', 'publicService', 'todoService', 'ui.bootstrap' ])
 
 	.config(['$stateProvider', '$urlRouterProvider', '$locationProvider', '$httpProvider', 
 		function($stateProvider, $urlRouterProvider, $locationProvider, $httpProvider) {
@@ -26,36 +26,35 @@ angular.module('authApp', ['ui.router', 'authController', 'authService' ])
 					// abstract: true,					
 					url: '/user',
 					templateUrl: '/partials/user.html',
-					resolve: { // need to resolve $scope.user so todos can be inserted (better way to do this?)
-						getUser: function(UserService) {
-							return UserService.getUser();
-						}
-					},					
+					// resolve: { // need to resolve $scope.user so todos can be inserted (better way to do this?)
+					// 	getUser: function(UserService) {
+					// 		return UserService.getUser();
+					// 	}
+					// },					
 					controller: 'UserCtrl',
 					authenticate: true
 				})
 					.state('user.admin', {
 						url: '/admin',
 						templateUrl: '/partials/user.admin.html',
+						controller: 'UserAdminCtrl',
 						authenticate: true
 					})
 					.state('user.todos', {
 						url: '/todos',
 						templateUrl: '/partials/user.todos.html',
-						resolve: { // test to get rid of empty data fields before ajax content is returned
-								getTodos: function(UserService) {
-									return UserService.getTodos();
-								}
-						},
-						controller: function($scope, getTodos) {
-							$scope.user.todos = getTodos.data;
-						},
+						// resolve: { // test to get rid of empty data fields before ajax content is returned
+						// 		getTodos: function(UserService) {
+						// 			return UserService.getTodos();
+						// 		}
+						// },
+						controller: 'UserTodoCtrl',
 						authenticate: true
 					})
 					.state('user.todoDetails', {
 						url: '/todo/details/:todo_id',
 						templateUrl: '/partials/user.todoDetails.html',
-						controller: 'TodoDetailsCtrl',
+						controller: 'UserTodoDetailsCtrl',
 						authenticate: true
 					});												
 

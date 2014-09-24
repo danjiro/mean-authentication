@@ -99,10 +99,9 @@ module.exports = function (app, passport) {
 		}, function (err, todo) {
 			if (err) { res.send(err); }
 
-			User.findOne( {'local.email': req.user.local.email })
+			User.findOne({'local.email': req.user.local.email })
 				.exec(function (err, user) {
 					if (err) { res.send(err) };
-
 					user.todos.push(todo._id);
 					user.save(function (err, user) {
 						if (err) { res.send(err) }
@@ -110,7 +109,8 @@ module.exports = function (app, passport) {
 						Todo.populate(user, { path: 'todos' }, function (err, user) {
 							if (err) { res.send(err) }
 
-							res.send(user.todos);
+							var todos = { todos: user.todos };
+							res.send(todos);
 						});
 					});
 				});
@@ -150,13 +150,15 @@ module.exports = function (app, passport) {
 				{ $pull: { todos: req.params.todo_id } }, function (err, user) {
 					if (err) { res.send(err) }
 
-					// repopulate user's todo list
-					Todo.populate(user, 
-						{ path: 'todos' }, function (err, user) {
-						if (err) { res.send(err) }
+					res.send({ message: 'Todo deleted' });
 
-						res.send(user.todos);
-					});
+					// repopulate user's todo list
+					// Todo.populate(user, 
+					// 	{ path: 'todos' }, function (err, user) {
+					// 	if (err) { res.send(err) }
+
+					// 	res.send(user.todos);
+					// });
 				});
 			});
 
@@ -173,38 +175,6 @@ module.exports = function (app, passport) {
 		});
 
 	});	
-
-	// profile page
-	// ------------------------------------------
-	// app.get('/auth/profile', isLoggedInApi, function (req, res) {
-	// 	res.send(req.user);
-	// });
-
-	// signup
-	// ------------------------------------------
-	// app.get('/signup', function (req, res) {
-	// 	if(req.isAuthenticated()) { res.redirect('/profile') }
-	// 	res.render('signup.ejs', { message: req.flash('signupMessage') });
-	// });
-
-
-
-
-
-	// post text to user's profile
-	// ------------------------------------------
-	// app.put('/api/user', isLoggedInApi, function (req, res) {
-	// 	// Add text field to current user
-	// 	User.findOne( { 'local.email': req.user.local.email }, function (err, user) {
-	// 		if(err) { res.send(err) }
-
-	// 		user.text = req.body.text;
-	// 		user.save(function (err) { 
-	// 			if(err) { res.send(err); } 
-	// 			res.send(user);
-	// 		});
-	// 	});
-	// });
 
 };
 

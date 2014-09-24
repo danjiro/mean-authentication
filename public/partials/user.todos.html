@@ -1,7 +1,7 @@
 <nav class="navbar navbar-default">
 	<div class="container-fluid">
 		<div class="navbar-header">
-			<a href="/" class="navbar-brand">Number of todos: {{ user.todos.length }}</a>
+			<a href="/" class="navbar-brand">Number of todos: {{ todos.length }}</a>
 		</div>
 		<form class="navbar-form navbar-left" role="search">
 			<div class="form-group">
@@ -22,7 +22,7 @@
 	<div class="col-lg-12">
 		<div class="input-group">
 			<!-- BIND THIS VALUE TO formData.text IN ANGULAR -->
-			<input type="text" class="form-control" placeholder="Add new item" ng-model="formData.text">
+			<input type="text" class="form-control" placeholder="Add new item" ng-model="todo.text">
 			<!-- createToDo() WILL CREATE NEW TODOS -->
 			<span class="input-group-btn">
 				<button type="submit" class="btn btn-primary" ng-click="createTodo()">Add</button>
@@ -46,7 +46,7 @@
 		</tr>
 	</thead>
 	<tbody>
-		<tr ng-repeat="todo in user.todos | orderBy: 'submitted':reverse | filter:doneFilter | filter:search.text">
+		<tr ng-repeat="todo in todos | orderBy: 'submitted':reverse | filter:doneFilter | filter:search.text">
 			<td>{{ todo.submitted | date:'medium' }}</td>
 			<td>{{ todo.text }}</td>
 			<td>
