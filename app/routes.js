@@ -28,6 +28,10 @@ module.exports = function (app, passport) {
 
 	});
 
+	//////////////////////////////////
+	// LOCAL AUTHENTICATION ROUTES //
+	//////////////////////////////////
+
 	// login [access: POST @ /auth/login]
 	// ------------------------------------------
 	app.post('/auth/login', function (req, res, next) {
@@ -66,8 +70,48 @@ module.exports = function (app, passport) {
 		})(req, res, next);
 	});	
 
-	// returns current authenticated user [access: GET @ /api/user/me]
-	// ------------------------------------------
+	/////////////////////////////////////
+	// FACEBOOK AUTHENTICATION ROUTES //
+	/////////////////////////////////////
+
+	/**
+	 * facebook authentication and login
+	 * [access: GET @ /auth/facebook]
+	 */
+	
+	 app.get('/auth/facebook', passport.authenticate('facebook', { scope: 'email' }));
+
+	 /**
+	  * facebook callback after authenticated
+	  * [access: GET @ /auth/facebook/callback]
+	  */
+	 // app.get('/auth/facebook/callback', function (req, res, next) {
+	 // 	passport.authenticate('facebook', { failureFlash: true }, function (err, user, info) {
+	 // 		if (err || !user) {
+	 // 			res.status(400).send(info);
+	 // 		}
+
+	 // 		else {
+	 // 			req.logIn(user, function (err) {
+	 // 				if (err) { return next(err) }
+	 // 				console.log('user is logged in');
+	 // 				console.log(user);
+	 // 				res.send(user);
+	 // 			});
+	 // 		};
+	 // 	})(req, res, next);
+	 // });
+
+	 app.get('/auth/facebook/callback', passport.authenticate('facebook', { successRedirect: '/auth/oauth', failureRedirect: '/' }));
+
+	//////////////////////////
+	// USER PROFILE ROUTES //
+	//////////////////////////
+	
+	/**
+	 * returns current authenticated user 
+	 * [access: GET @ /api/user/me]
+	 */
 	app.get('/api/user/me', isLoggedInApi, function (req, res) {
 		res.send(req.user);
 	});
@@ -125,7 +169,8 @@ module.exports = function (app, passport) {
 		});
 	});
 
-	// get todo details [ access: GET @ /api/todos/todo_id ]
+	// get todo details [ access: GET @ /api/user/todos/todo_id ]
+	// ------------------------------------------
 	app.get('/api/user/todos/:todo_id', hasAccessToTodo, function(req, res) {
 		Todo.findById( req.params.todo_id, function(err, todo) {
 			if (err) { res.send(err); }
@@ -133,10 +178,8 @@ module.exports = function (app, passport) {
 		});
 	})	
 
-	// delete todo [access: DELETE @ /api/user/todos/todo_id]
+	// delete a todo [ access: DELETE @ /api/user/todos/todo_id ]
 	// ------------------------------------------
-
-	// delete a todo [ access: DELETE @ /api/todos/todo_id ]
 	app.delete('/api/user/todos/:todo_id', hasAccessToTodo, function(req, res) {
 
 		// delete the todo
@@ -164,7 +207,8 @@ module.exports = function (app, passport) {
 
 	});
 
-	// update a todo [ access: PUT @ /api/todos/todo_id ]
+	// update a todo [ access: PUT @ /api/user/todos/todo_id ]
+	// ------------------------------------------
 	app.put('/api/user/todos/:todo_id', hasAccessToTodo, function(req, res) {
 		// update a todo
 		Todo.findByIdAndUpdate(req.params.todo_id, 

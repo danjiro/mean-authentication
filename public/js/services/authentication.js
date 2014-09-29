@@ -14,6 +14,17 @@ angular.module('authService', ['sessionService', 'ui.router'])
 						$state.transitionTo('user');
 					});
 			},
+			oauth: function() {
+				$http.get('/api/user/me')
+					.success(function (user) {
+						$window.sessionStorage.sessionOwner = JSON.stringify({username: user.local.username, email: user.local.email});
+						SessionService.create();
+						$state.transitionTo('user');
+					})
+					.error(function() {
+						$state.transitionTo('signup');
+					});
+			},
 			signup: function(username, email, password) {
 				return $http.post('/auth/signup', {username: username, email: email, password: password})
 					.success(function (user) {

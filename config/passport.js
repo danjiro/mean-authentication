@@ -1,7 +1,14 @@
 // config/passport.js
 
+// Passport strategies
 var LocalStrategy = require('passport-local').Strategy;
+var FacebookStrategy = require('passport-facebook').Strategy;
+
+// User mongodb model
 var User = require('../app/models/user.js');
+
+// Load OAuth variables
+var configAuth = require('./auth.js');
 
 module.exports = function(passport) {
 
@@ -99,5 +106,47 @@ module.exports = function(passport) {
 			});
 		}
 	));
+
+	// facebook login
+	// ------------------------------------------
+	passport.use(new FacebookStrategy({
+
+		// pull in facebook app auth details
+		clientID: configAuth.facebookAuth.clientID,
+		clientSecret: configAuth.facebookAuth.clientSecret,
+		callbackURL: configAuth.facebookAuth.callbackURL
+
+	}, 
+	// facebook sends back token and profile
+	function(token, refreshToken, profile, done) {
+		process.nextTick(function() {
+			// console.log(profile);
+			User.findOne({ 'facebook.id': profile.id }, function (err, user) {
+				if (err) { return done(err) }
+
+				// if user is found, log them in
+				if (user) { return done(null, user) }
+				// if no user is found with that facebook id, create them
+				else {
+					var newUser = new User();
+
+					// set all facebook profile info into user's model
+					newUser.local.username = profile.id;
+					newUser.local.email = profile.emails[0].value;
+					newUser.facebook.id = profile.id;
+					newUser.facebook.token = token;
+					newUser.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
+					newUser.facebook.email = profile.emails[0].value;
+
+					// save user to database
+					newUser.save(function (err) {
+						if (err) { throw err; }
+
+						return done(null, newUser);
+					});
+				};
+			});
+		});
+	}));
 
 };

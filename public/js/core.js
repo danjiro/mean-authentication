@@ -22,6 +22,14 @@ angular.module('authApp', ['ui.router', 'ngResource', 'authController', 'authSer
 					templateUrl: '/partials/signup.html',
 					controller: 'SignupCtrl', 
 				})
+				.state('oauth', {
+					url: '/auth/oauth',
+					resolve: {
+						resolveOauth: function(AuthService) {
+							return AuthService.oauth();
+						}
+					}
+				})
 				.state('user', {
 					// abstract: true,					
 					url: '/user',

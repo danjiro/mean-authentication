@@ -7,7 +7,7 @@ angular.module('authController', [])
 	// main app controller. encompasses entire app
 	// ------------------------------------------
 	.controller('AppCtrl', ['$scope', '$state', 'SessionService', 'AuthService', function($scope, $state, SessionService, AuthService) {
-		
+
 		$scope.$watch(AuthService.isAuthenticated, function() {
 			if (AuthService.isAuthenticated) {
 				$scope.sessionOwner = SessionService.sessionOwner;

@@ -10,4 +10,5 @@
 		_creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 		watchers: [{ type: Number, ref: 'User '}]
 	});
+	
 	module.exports = mongoose.model('Todo', todoSchema);
